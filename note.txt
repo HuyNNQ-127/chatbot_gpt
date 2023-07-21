@@ -1,0 +1,9 @@
+*Yêu cầu làm giao diện trên flutter:
+1.home screen
+-api key(save in varible)
+-2 button chuyển đến chat screen and summerize screen
+2.chat screen
+3.summerize screen
+*Lưu ý:
+-cài thêm extension chatgpt và eror lens trên vscode
+-tải bài làm lên trên github

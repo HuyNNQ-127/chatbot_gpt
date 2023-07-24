@@ -53,8 +53,8 @@ class _TabsScreenState extends State<TabsScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.newspaper),
-            label: 'Favorites',
+            icon: Icon(Icons.newspaper_sharp),
+            label: 'Summarize',
           ),
         ],
       ),

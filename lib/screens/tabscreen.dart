@@ -29,12 +29,12 @@ class _TabsScreenState extends State<TabsScreen> {
     var activePageTitle = 'Home';
 
     if (_SelectedPageIndex == 0) {
-      activePage = const ChatScreen();
+      //activePage = const ChatScreen();
       activePageTitle = 'Chatting';
     }
 
     if (_SelectedPageIndex == 2) {
-      activePage = const SummarizeScreen();
+//      activePage = const SummarizeScreen();
       activePageTitle = 'Summarize';
     }
 
@@ -53,7 +53,7 @@ class _TabsScreenState extends State<TabsScreen> {
             label: 'Home',
           ),
           BottomNavigationBarItem(
-            icon: Icon(Icons.newspaper_sharp),
+            icon: Icon(Icons.message_outlined),
             label: 'Summarize',
           ),
         ],

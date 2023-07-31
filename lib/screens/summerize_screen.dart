@@ -1,7 +1,12 @@
 import 'package:flutter/material.dart';
 
 class SummarizeScreen extends StatelessWidget {
-  const SummarizeScreen({super.key});
+  const SummarizeScreen({
+    super.key,
+    required this.openAIKey,
+  });
+
+  final openAIKey;
   static const index = 'summarize_screen';
 
   @override

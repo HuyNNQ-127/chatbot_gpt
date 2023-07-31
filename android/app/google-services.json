@@ -32,10 +32,10 @@
               "client_type": 3
             },
             {
-              "client_id": "512984318818-uq1oja5vrntq8fdqampcsujgbmgtpkvd.apps.googleusercontent.com",
+              "client_id": "512984318818-ukdps4mbl83lrskh516j9rqncen89977.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.chatApp"
+                "bundle_id": "com.example.chatbotGpt"
               }
             }
           ]
@@ -68,10 +68,10 @@
               "client_type": 3
             },
             {
-              "client_id": "512984318818-uq1oja5vrntq8fdqampcsujgbmgtpkvd.apps.googleusercontent.com",
+              "client_id": "512984318818-ukdps4mbl83lrskh516j9rqncen89977.apps.googleusercontent.com",
               "client_type": 2,
               "ios_info": {
-                "bundle_id": "com.example.chatApp"
+                "bundle_id": "com.example.chatbotGpt"
               }
             }
           ]

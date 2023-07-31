@@ -17,7 +17,10 @@ import 'package:flutter/foundation.dart'
 class DefaultFirebaseOptions {
   static FirebaseOptions get currentPlatform {
     if (kIsWeb) {
-      return web;
+      throw UnsupportedError(
+        'DefaultFirebaseOptions have not been configured for web - '
+        'you can reconfigure this by running the FlutterFire CLI again.',
+      );
     }
     switch (defaultTargetPlatform) {
       case TargetPlatform.android:
@@ -25,7 +28,10 @@ class DefaultFirebaseOptions {
       case TargetPlatform.iOS:
         return ios;
       case TargetPlatform.macOS:
-        return macos;
+        throw UnsupportedError(
+          'DefaultFirebaseOptions have not been configured for macos - '
+          'you can reconfigure this by running the FlutterFire CLI again.',
+        );
       case TargetPlatform.windows:
         throw UnsupportedError(
           'DefaultFirebaseOptions have not been configured for windows - '
@@ -42,16 +48,6 @@ class DefaultFirebaseOptions {
         );
     }
   }
-
-  static const FirebaseOptions web = FirebaseOptions(
-    apiKey: 'AIzaSyBwo9cGthcbHtA1UV1kQ_-9s0zuIlyBml4',
-    appId: '1:512984318818:web:9721e3244a0e4e7043223b',
-    messagingSenderId: '512984318818',
-    projectId: 'test-firebase-3d494',
-    authDomain: 'test-firebase-3d494.firebaseapp.com',
-    databaseURL: 'https://test-firebase-3d494-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'test-firebase-3d494.appspot.com',
-  );
 
   static const FirebaseOptions android = FirebaseOptions(
     apiKey: 'AIzaSyA3bV2NKE1Hz068zt2Z5ddHv6xjUqnkFU8',
@@ -71,16 +67,5 @@ class DefaultFirebaseOptions {
     storageBucket: 'test-firebase-3d494.appspot.com',
     iosClientId: '512984318818-ukdps4mbl83lrskh516j9rqncen89977.apps.googleusercontent.com',
     iosBundleId: 'com.example.chatbotGpt',
-  );
-
-  static const FirebaseOptions macos = FirebaseOptions(
-    apiKey: 'AIzaSyCnrZzr3z_YAmEYDS-bWcyq9oOVZfJT9Rs',
-    appId: '1:512984318818:ios:2c872cf50805e5b643223b',
-    messagingSenderId: '512984318818',
-    projectId: 'test-firebase-3d494',
-    databaseURL: 'https://test-firebase-3d494-default-rtdb.asia-southeast1.firebasedatabase.app',
-    storageBucket: 'test-firebase-3d494.appspot.com',
-    iosClientId: '512984318818-vffi8dc4adb69tlm5pg62d1rp299tr8p.apps.googleusercontent.com',
-    iosBundleId: 'com.example.chatbotGpt.RunnerTests',
   );
 }

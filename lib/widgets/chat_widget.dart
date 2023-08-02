@@ -15,7 +15,8 @@ class ChatWidget extends StatelessWidget {
 
   final String message;
   final int chatIndex;
-  FlutterTts tts = FlutterTts();
+  final FlutterTts tts = FlutterTts();
+//  TextToSpeech tts = TextToSpeech();
   bool _speaking = false;
 
   void chat_speaking() async {
@@ -49,6 +50,9 @@ class ChatWidget extends StatelessWidget {
                 if (chatIndex == 1)
                   IconButton(
                       onPressed: chat_speaking,
+                      /*{
+                        tts.speak(message);
+                      }*/
                       icon: const Icon(Icons.volume_up_rounded))
               ],
             ),

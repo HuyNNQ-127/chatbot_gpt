@@ -5,6 +5,7 @@ import 'package:chatbot_gpt/widgets/chat_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:dart_openai/dart_openai.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 class ChatScreen extends StatefulWidget {
   const ChatScreen({super.key});
@@ -17,6 +18,8 @@ class ChatScreen extends StatefulWidget {
 
 class _ChatScreenState extends State<ChatScreen> {
   bool _isTyping = false;
+  bool _speaking = false;
+  late SpeechToText _speechTransform;
   String _checkconnect = "true";
 
   late TextEditingController textEditingController;
@@ -24,6 +27,7 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     textEditingController = TextEditingController();
+    _speechTransform = SpeechToText();
     super.initState();
   }
 
@@ -38,8 +42,15 @@ class _ChatScreenState extends State<ChatScreen> {
     var docSnapshot = await collection.doc('test_instance').get();
     Map<String, dynamic> data = docSnapshot.data()!;
     OpenAI.apiKey = data["API_Key"];
+
     if (textEditingController.text.trim().isEmpty) {
       return;
+    }
+    if (_speaking) {
+      setState(() {
+        _speaking = false;
+        _speechTransform.stop();
+      });
     }
 
     String msg = textEditingController.text;
@@ -76,6 +87,49 @@ class _ChatScreenState extends State<ChatScreen> {
           "\n GPT:" +
           chatgpt.choices[0].message.content,
     });*/
+  }
+
+  void _Listen() async {
+    var collection = FirebaseFirestore.instance.collection('ChatGPT');
+    var docSnapshot = await collection.doc('test_instance').get();
+    Map<String, dynamic> data = docSnapshot.data()!;
+    _checkconnect = data["Connection"];
+    if (!_speaking) {
+      bool availability = await _speechTransform.initialize(
+        onStatus: (value) {
+          print("OnStatus: $value");
+          if (value == "done") {
+            setState(() {
+              _speaking = false;
+              _speechTransform.stop();
+            });
+          }
+        },
+        onError: (value) => print("error: $value"),
+      );
+
+      if (availability) {
+        setState(() {
+          _speaking = true;
+        });
+
+        _speechTransform.listen(
+          localeId: "vi_VN",
+          listenFor: const Duration(seconds: 60),
+          onResult: (value) => setState(() {
+            textEditingController.text = value.recognizedWords;
+            if (_isTyping == true) {
+              textEditingController.clear();
+            }
+          }),
+        );
+      } else {
+        setState(() {
+          _speaking = false;
+          _speechTransform.stop();
+        });
+      }
+    }
   }
 
   @override
@@ -150,6 +204,15 @@ class _ChatScreenState extends State<ChatScreen> {
                             decoration: const InputDecoration.collapsed(
                                 hintText: "Enter text here!",
                                 hintStyle: TextStyle(color: Colors.grey)),
+                          ),
+                        ),
+                        IconButton(
+                          onPressed: () => _Listen(),
+                          icon: Icon(
+                            _speaking ? Icons.mic : Icons.mic_off,
+                            color: _speaking
+                                ? Color.fromARGB(255, 19, 164, 232)
+                                : Colors.white,
                           ),
                         ),
                         IconButton(

@@ -33,9 +33,9 @@ class MyApp extends StatelessWidget {
           builder: (ctx, snapshot) {
             final document = snapshot.data;
             Map<String, dynamic>? data = document?.data();
-            /*if (data?["previous_api_existed"] == "true") {
-              return ChatScreen(openaikey: data?["API_Key"]);
-            }*/
+            if (data?["previous_api_existed"] == true) {
+              return const ChatScreen();
+            }
             return const HomeScreen();
           }),
       debugShowCheckedModeBanner: false,

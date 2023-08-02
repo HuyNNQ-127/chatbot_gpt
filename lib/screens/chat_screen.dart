@@ -3,19 +3,11 @@
 import 'package:flutter/material.dart';
 import 'package:chatbot_gpt/widgets/chat_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:chatbot_gpt/widgets/api_widget.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
 import 'package:dart_openai/dart_openai.dart';
-import "dart:io";
-import "package:whisper_dart/scheme/scheme.dart";
 
 class ChatScreen extends StatefulWidget {
-  const ChatScreen({
-    super.key,
-    required this.openaikey,
-  });
-
-  final String openaikey;
+  const ChatScreen({super.key});
 
   @override
   State<ChatScreen> createState() {
@@ -32,7 +24,6 @@ class _ChatScreenState extends State<ChatScreen> {
   @override
   void initState() {
     textEditingController = TextEditingController();
-    OpenAI.apiKey = widget.openaikey;
     super.initState();
   }
 
@@ -43,8 +34,24 @@ class _ChatScreenState extends State<ChatScreen> {
   }
 
   void _submitMessage() async {
+    var collection = FirebaseFirestore.instance.collection('ChatGPT');
+    var docSnapshot = await collection.doc('test_instance').get();
+    Map<String, dynamic> data = docSnapshot.data()!;
+    OpenAI.apiKey = data["API_Key"];
+    if (textEditingController.text.trim().isEmpty) {
+      return;
+    }
+
     String msg = textEditingController.text;
+    _isTyping = true;
     textEditingController.clear();
+
+    FirebaseFirestore.instance.collection("Conversation").add({
+      "text": msg,
+      "Index": 0,
+      "Timestamp": Timestamp.now(),
+    });
+
     OpenAIChatCompletionModel chatgpt = await OpenAI.instance.chat.create(
       model: "gpt-3.5-turbo",
       messages: [
@@ -53,15 +60,31 @@ class _ChatScreenState extends State<ChatScreen> {
       ],
     );
     print(chatgpt.choices[0].message.content);
+    _isTyping = false;
+    FirebaseFirestore.instance.collection("Conversation").add({
+      "text": chatgpt.choices[0].message.content,
+      "Index": 1,
+      "Timestamp": Timestamp.now(),
+    }); /*
+    FirebaseFirestore.instance
+        .collection("Conversation")
+        .doc("Chatbox")
+        .update({
+      "Total_conversation": data["Total_conversation"] +
+          "\n Human:" +
+          msg +
+          "\n GPT:" +
+          chatgpt.choices[0].message.content,
+    });*/
   }
 
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
       stream: FirebaseFirestore.instance
-          .collection("chat")
+          .collection("Conversation")
           .orderBy(
-            "createdAt",
+            "Timestamp",
             descending: true,
           )
           .snapshots(),
@@ -93,12 +116,11 @@ class _ChatScreenState extends State<ChatScreen> {
                     reverse: true,
                     itemCount: loadedMessages.length,
                     itemBuilder: (context, index) {
-                      /*
                       final chatMessage = loadedMessages[index].data();
                       return ChatWidget(
-                        msg: chatMessage["text"],
-                        chatIndext: chatMessage["Indext"],
-                      );*/
+                        message: chatMessage["text"],
+                        chatIndex: chatMessage["Index"],
+                      );
                     },
                   ),
                 ),

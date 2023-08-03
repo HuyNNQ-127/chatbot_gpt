@@ -15,7 +15,6 @@ class HomeScreen extends StatefulWidget {
 class _HomeScreenState extends State<HomeScreen> {
   final _form = GlobalKey<FormState>();
   var _enteredAPI = "";
-  var _enterUserName = "";
   bool _isAPI = false;
 
   Future<bool> checkApiKey(String apiKey) async {
@@ -76,10 +75,10 @@ class _HomeScreenState extends State<HomeScreen> {
               ),
               Card(
                 color: Colors.white,
-                margin: EdgeInsets.all(20),
+                margin: const EdgeInsets.all(20),
                 child: SingleChildScrollView(
                   child: Padding(
-                    padding: EdgeInsets.all(16),
+                    padding: const EdgeInsets.all(16),
                     child: Form(
                       key: _form,
                       child: Column(
@@ -98,7 +97,7 @@ class _HomeScreenState extends State<HomeScreen> {
                               if (value == null ||
                                   value.trim().isEmpty ||
                                   value.trim().length != 51) {
-                                return "Please enter a vaild API key!";
+                                return "Please enter a valid API key!";
                               }
                               if (_isAPI == false) {
                                 return "API Key does not exist.";

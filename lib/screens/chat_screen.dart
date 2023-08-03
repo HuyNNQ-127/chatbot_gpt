@@ -76,17 +76,21 @@ class _ChatScreenState extends State<ChatScreen> {
       "text": chatgpt.choices[0].message.content,
       "Index": 1,
       "Timestamp": Timestamp.now(),
-    }); /*
-    FirebaseFirestore.instance
-        .collection("Conversation")
-        .doc("Chatbox")
-        .update({
-      "Total_conversation": data["Total_conversation"] +
-          "\n Human:" +
-          msg +
-          "\n GPT:" +
-          chatgpt.choices[0].message.content,
-    });*/
+    });
+    var collection_1 = FirebaseFirestore.instance.collection('Conversation');
+    var docSnapshot_1 = await collection_1.doc('Chatbox').get();
+    Map<String, dynamic> summary = docSnapshot_1.data()!;
+
+    String conversation = summary["Total_conversation"].toString();
+    FirebaseFirestore.instance.collection("Conversation").doc("Chatbox").update(
+      {
+        "Total_conversation": conversation +
+            "\nHuman: " +
+            msg +
+            "\nGPT: " +
+            chatgpt.choices[0].message.content,
+      },
+    );
   }
 
   void _Listen() async {
@@ -211,7 +215,7 @@ class _ChatScreenState extends State<ChatScreen> {
                           icon: Icon(
                             _speaking ? Icons.mic : Icons.mic_off,
                             color: _speaking
-                                ? Color.fromARGB(255, 19, 164, 232)
+                                ? const Color.fromARGB(255, 19, 164, 232)
                                 : Colors.white,
                           ),
                         ),

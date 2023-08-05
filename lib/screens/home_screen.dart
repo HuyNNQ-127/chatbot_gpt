@@ -1,4 +1,6 @@
 // ignore_for_file: unused_local_variable, unused_field, avoid_print, prefer_interpolation_to_compose_strings, empty_catches, non_constant_identifier_names, prefer_typing_uninitialized_variables
+import 'package:chatbot_gpt/screens/chat_screen.dart';
+import 'package:chatbot_gpt/screens/summerize_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -16,6 +18,16 @@ class _HomeScreenState extends State<HomeScreen> {
   final _form = GlobalKey<FormState>();
   var _enteredAPI = "";
   bool _isAPI = false;
+  var screen_index = 0;
+  var apikey = '';
+  bool api_status = false;
+  bool _newAPI = false;
+
+  @override
+  void initState() {
+    apikey = _getAPI().toString();
+    super.initState();
+  }
 
   Future<bool> checkApiKey(String apiKey) async {
     final response = await http.get(
@@ -34,7 +46,7 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
-  Future<void> _submit() async {
+  Future<void> _submitAPI() async {
     final isValid = _form.currentState!.validate();
     if (isValid) {
       _form.currentState!.save();
@@ -46,88 +58,124 @@ class _HomeScreenState extends State<HomeScreen> {
         "API_Key": _enteredAPI,
         "previous_api_existed": true,
       });
-      print('Submit success');
+      screen_index = 1;
     }
+  }
+
+  Future<String> _getAPI() async {
+    var collection = FirebaseFirestore.instance.collection('ChatGPT');
+    var docSnapshot = await collection.doc('test_instance').get();
+    Map<String, dynamic> data = docSnapshot.data()!;
+    apikey = data["API_Key"].toString();
+    return apikey;
+  }
+
+  void _getAPI_status() async {
+    var collection = FirebaseFirestore.instance.collection('ChatGPT');
+    var docSnapshot = await collection.doc('test_instance').get();
+    Map<String, dynamic> data = docSnapshot.data()!;
+    api_status = data["previous_api_existed"];
+  }
+
+  Future<void> _deleteAPI() async {
+    var collection = FirebaseFirestore.instance.collection('ChatGPT');
+    collection.doc("test_instance").update({
+      "API_Key": '',
+      "previous_api_existed": false,
+    });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.blue.shade100,
-      body: Center(
-        child: SingleChildScrollView(
-          child: Column(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Container(
-                margin: const EdgeInsets.only(
-                  top: 30,
-                  bottom: 20,
-                  left: 20,
-                  right: 20,
-                ),
-                width: 500,
-                child: Image.asset(
-                  "assets/logo.png",
-                  width: 200,
-                  height: 200,
-                ),
+    return Form(
+      key: _form,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Container(
+            margin: const EdgeInsets.only(
+              top: 250,
+              bottom: 20,
+              left: 20,
+              right: 20,
+            ),
+            width: 250,
+            height: 250,
+            decoration: BoxDecoration(
+              image: DecorationImage(
+                image: Image.asset(
+                  'assets/logo.png',
+                  height: 100,
+                  width: 100,
+                ).image,
               ),
-              Card(
-                color: Colors.white,
-                margin: const EdgeInsets.all(20),
-                child: SingleChildScrollView(
-                  child: Padding(
-                    padding: const EdgeInsets.all(16),
-                    child: Form(
-                      key: _form,
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          TextFormField(
-                            decoration: const InputDecoration(
-                                labelText: "Enter API key here!"),
-                            autocorrect: false,
-                            textCapitalization: TextCapitalization.none,
-                            onChanged: (value) async {
-                              final check = await checkApiKey(value);
-                              setState(() => _isAPI = check);
-                            },
-                            validator: (value) {
-                              if (value == null ||
-                                  value.trim().isEmpty ||
-                                  value.trim().length != 51) {
-                                return "Please enter a valid API key!";
-                              }
-                              if (_isAPI == false) {
-                                return "API Key does not exist.";
-                              }
-                              return null;
-                            },
-                            onSaved: (value) {
-                              _enteredAPI = value!;
-                            },
-                          ),
-                          const SizedBox(height: 12),
-                          ElevatedButton(
-                            onPressed: _submit,
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Theme.of(context)
-                                  .colorScheme
-                                  .primaryContainer,
-                            ),
-                            child: const Text("Submit key"),
-                          )
-                        ],
-                      ),
-                    ),
-                  ),
+            ),
+          ),
+          const Text(
+            'Current Key:',
+            style: TextStyle(
+              fontSize: 24,
+              color: Colors.black,
+            ),
+          ),
+          Text(
+            _getAPI().toString(),
+            style: const TextStyle(fontSize: 24),
+            textAlign: TextAlign.center,
+          ),
+          const SizedBox(
+            height: 20,
+          ),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceAround,
+            children: [
+              ElevatedButton(
+                onPressed: () {
+                  _deleteAPI();
+                  setState(() {
+                    _enteredAPI = '';
+                    _isAPI = false;
+                  });
+                },
+                style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.green),
                 ),
+                child: const Text('New Key'),
+              ),
+              ElevatedButton(
+                onPressed: () {
+                  screen_index = 1;
+                },
+                style: ButtonStyle(
+                  backgroundColor:
+                      MaterialStateProperty.all<Color>(Colors.green),
+                ),
+                child: const Text('Continue with current key'),
               ),
             ],
           ),
-        ),
+          const SizedBox(height: 140)
+        ],
       ),
     );
   }
 }
+/*
+StreamBuilder(
+      stream: FirebaseFirestore.instance
+          .collection("ChatGPT")
+          .doc("test_instance")
+          .snapshots(),
+      builder: (ctx, snapshot) {
+        final document = snapshot.data;
+        Map<String, dynamic>? data = document?.data();
+        if (data?["previous_api_existed"] == false) {
+          _getAPI();
+        } else {
+          _previous_API();
+        }
+      },
+    );
+    */
+

@@ -1,31 +1,33 @@
+import 'package:chatbot_gpt/screens/home_screen.dart';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chatbot_gpt/screens/chat_screen.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:http/http.dart' as http;
 
-class EnterAPI extends StatelessWidget {
-  EnterAPI({super.key});
+class EnterAPI extends StatefulWidget {
+  const EnterAPI({super.key});
+  @override
+  State<StatefulWidget> createState() {
+    return EnterAPIState();
+  }
+}
 
-  var _enteredAPI = "";
-  bool _isAPI = false;
-  var switchScreen = false;
+class EnterAPIState extends State<EnterAPI> {
   final _form = GlobalKey<FormState>();
+  var _enteredAPI = "";
+  bool? _isAPI;
+  var _submitComplete;
 
   Future<bool> checkApiKey(String apiKey) async {
     final response = await http.get(
       Uri.parse("https://api.openai.com/v1/models"),
       headers: {"Authorization": "Bearer $apiKey"},
     );
-    var collection = FirebaseFirestore.instance.collection('ChatGPT');
-    var docSnapshot = await collection.doc('test_instance').get();
-    Map<String, dynamic> data = docSnapshot.data()!;
     if (response.statusCode == 200) {
       _isAPI = true;
-      print(response.statusCode);
       return true;
-    } else {
-      return false;
     }
+    return false;
   }
 
   Future<void> _submit() async {
@@ -35,92 +37,95 @@ class EnterAPI extends StatelessWidget {
     }
     var collection = FirebaseFirestore.instance.collection('ChatGPT');
     if (_isAPI == true) {
-      collection.doc("test_instance").update({
-        "API_Key": _enteredAPI,
-        "previous_api_existed": true,
-      });
-      print('Submit success');
+      collection
+          .doc("test_instance")
+          .update({"API_Key": _enteredAPI, "previous_api_existed": "true"});
+      //  _submitComplete = true;
     }
+  }
+
+  void _newChatScreen(BuildContext context) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (ctx) => const ChatScreen()));
   }
 
   @override
   Widget build(BuildContext context) {
-    Widget switchScreen = ChatScreen();
-    Widget EnterAPIScreen = Center(
-      child: SingleChildScrollView(
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(
-              margin: const EdgeInsets.only(
-                top: 30,
-                bottom: 20,
-                left: 20,
-                right: 20,
+    return Scaffold(
+      backgroundColor: Colors.blue.shade100,
+      body: Center(
+        child: SingleChildScrollView(
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Container(
+                margin: const EdgeInsets.only(
+                  top: 30,
+                  bottom: 20,
+                  left: 20,
+                  right: 20,
+                ),
+                width: 500,
+                child: Image.asset("assets/logo.png"),
               ),
-              width: 500,
-              child: Image.asset(
-                "assets/logo.png",
-                width: 200,
-                height: 200,
-              ),
-            ),
-            Card(
-              color: Colors.white,
-              margin: const EdgeInsets.all(20),
-              child: SingleChildScrollView(
-                child: Padding(
-                  padding: const EdgeInsets.all(16),
-                  child: Form(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        TextFormField(
-                          decoration: const InputDecoration(
-                              labelText: "Enter API key here!"),
-                          autocorrect: false,
-                          textCapitalization: TextCapitalization.none,
-                          onChanged: (value) async {
-                            final check = await checkApiKey(value);
-                            _isAPI = check;
-                          },
-                          validator: (value) {
-                            if (value == null ||
-                                value.trim().isEmpty ||
-                                value.trim().length != 51) {
-                              return "Please enter a valid API key!";
-                            }
-                            if (_isAPI == false) {
-                              return "API Key does not exist.";
-                            }
-                            return null;
-                          },
-                          onSaved: (value) {
-                            _enteredAPI = value!;
-                          },
-                        ),
-                        const SizedBox(height: 12),
-                        ElevatedButton(
-                          onPressed: () {
-                            _submit;
-                            switchScreen;
-                          },
-                          style: ElevatedButton.styleFrom(
-                            backgroundColor:
-                                Theme.of(context).colorScheme.primaryContainer,
+              Card(
+                margin: const EdgeInsets.all(20),
+                child: SingleChildScrollView(
+                  child: Padding(
+                    padding: const EdgeInsets.all(16),
+                    child: Form(
+                      key: _form,
+                      child: Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          TextFormField(
+                            decoration:
+                                const InputDecoration(labelText: "Api Key"),
+                            autocorrect: false,
+                            textCapitalization: TextCapitalization.none,
+                            onChanged: (value) async {
+                              final check = await checkApiKey(value);
+                              setState(() => _isAPI = check);
+                            },
+                            validator: (value) {
+                              if (value == null || value.trim().isEmpty) {
+                                return "API key cannot be null!";
+                              }
+
+                              if (value.trim().length != 51) {
+                                return "Invalid API key length!";
+                              }
+                              if (!_isAPI!) {
+                                return "API Key does not exist!";
+                              }
+                              return null;
+                            },
+                            onSaved: (value) {
+                              _enteredAPI = value!;
+                            },
                           ),
-                          child: const Text("Submit key"),
-                        ),
-                      ],
+                          const SizedBox(height: 12),
+                          ElevatedButton(
+                            onPressed: () {
+                              _submit;
+                              _newChatScreen(context);
+                            },
+                            style: ButtonStyle(
+                              backgroundColor: MaterialStateProperty.all<Color>(
+                                  Colors.green),
+                            ),
+                            child: const Text("Submit"),
+                          )
+                        ],
+                      ),
                     ),
                   ),
                 ),
               ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
-    return EnterAPIScreen;
   }
 }

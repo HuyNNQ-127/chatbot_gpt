@@ -1,11 +1,9 @@
 // ignore_for_file: unused_local_variable, unused_field, avoid_print, prefer_interpolation_to_compose_strings, empty_catches, non_constant_identifier_names, prefer_typing_uninitialized_variables
-import 'package:chatbot_gpt/screens/chat_screen.dart';
 import 'package:chatbot_gpt/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chatbot_gpt/screens/enterAPI.dart';
-import 'dart:convert';
 
 class TabsScreen extends StatefulWidget {
   const TabsScreen({super.key});
@@ -29,7 +27,7 @@ class _TabsScreenState extends State<TabsScreen> {
   @override
   void initState() {
     apikey = _getAPI.toString();
-    _isAPI = checkApiKey(apikey);
+    _isAPI = false;
     super.initState();
   }
 
@@ -60,17 +58,19 @@ class _TabsScreenState extends State<TabsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    if (_isAPI == true && apikey != '') {
+    setState(
+        () {}); /*
+    if (checkApiKey(apikey) == true && apikey != '') {
       test = const HomeScreen();
     } else {
-      if (_isAPI == false || apikey != '') {
+      if (checkApiKey(apikey) == false || apikey == '') {
         test = EnterAPI();
       }
-    }
+    }*/
 
     return Scaffold(
       backgroundColor: Colors.blue.shade100,
-      body: test,
+      body: test = HomeScreen(),
     );
   }
 }

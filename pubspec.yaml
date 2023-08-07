@@ -47,6 +47,8 @@ dependencies:
   speech_to_text: ^6.3.0
 #  text_to_speech: ^0.2.3
   flutter_tts: ^3.7.0
+  file_picker: ^5.3.3
+  langchain: ^0.0.5
 
 dev_dependencies:
   flutter_test:

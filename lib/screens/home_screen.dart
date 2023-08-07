@@ -1,5 +1,6 @@
 // ignore_for_file: unused_local_variable, unused_field, avoid_print, prefer_interpolation_to_compose_strings, empty_catches, non_constant_identifier_names, prefer_typing_uninitialized_variables
 import 'package:chatbot_gpt/screens/chat_screen.dart';
+import 'package:chatbot_gpt/screens/enterAPI.dart';
 import 'package:chatbot_gpt/screens/summerize_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -85,78 +86,101 @@ class _HomeScreenState extends State<HomeScreen> {
     });
   }
 
+  void _newChatScreen(BuildContext context) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (ctx) => const ChatScreen()));
+  }
+
+  void _newEnterAPI(BuildContext context) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (ctx) => const EnterAPI()));
+  }
+
+  String _keyToken() {
+    var usedKey = apikey;
+
+    var key = usedKey.substring(0, 3) +
+        '***********' +
+        usedKey.substring(usedKey.length - 4, usedKey.length);
+    return key;
+  }
+
   @override
   Widget build(BuildContext context) {
-    return Form(
-      key: _form,
-      child: Column(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          Container(
-            margin: const EdgeInsets.only(
-              top: 250,
-              bottom: 20,
-              left: 20,
-              right: 20,
-            ),
-            width: 250,
-            height: 250,
-            decoration: BoxDecoration(
-              image: DecorationImage(
-                image: Image.asset(
-                  'assets/logo.png',
-                  height: 100,
-                  width: 100,
-                ).image,
+    return Scaffold(
+      backgroundColor: Colors.blue.shade100,
+      body: Form(
+        key: _form,
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Container(
+              margin: const EdgeInsets.only(
+                top: 250,
+                bottom: 20,
+                left: 20,
+                right: 20,
               ),
-            ),
-          ),
-          const Text(
-            'Current Key:',
-            style: TextStyle(
-              fontSize: 24,
-              color: Colors.black,
-            ),
-          ),
-          Text(
-            _getAPI().toString(),
-            style: const TextStyle(fontSize: 24),
-            textAlign: TextAlign.center,
-          ),
-          const SizedBox(
-            height: 20,
-          ),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
-            children: [
-              ElevatedButton(
-                onPressed: () {
-                  _deleteAPI();
-                  setState(() {
-                    _enteredAPI = '';
-                    _isAPI = false;
-                  });
-                },
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.green),
+              width: 250,
+              height: 250,
+              decoration: BoxDecoration(
+                image: DecorationImage(
+                  image: Image.asset(
+                    'assets/logo.png',
+                    height: 100,
+                    width: 100,
+                  ).image,
                 ),
-                child: const Text('New Key'),
               ),
-              ElevatedButton(
-                onPressed: () {
-                  screen_index = 1;
-                },
-                style: ButtonStyle(
-                  backgroundColor:
-                      MaterialStateProperty.all<Color>(Colors.green),
+            ),
+            const Text(
+              'Current Key:',
+              style: TextStyle(
+                fontSize: 24,
+                color: Colors.black,
+              ),
+            ),
+            Text(
+              apikey,
+              style: const TextStyle(fontSize: 24),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(
+              height: 20,
+            ),
+            Row(
+              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              children: [
+                ElevatedButton(
+                  onPressed: () {
+                    _deleteAPI();
+                    setState(() {
+                      _enteredAPI = '';
+                      _isAPI = false;
+                    });
+                    _newEnterAPI(context);
+                  },
+                  style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all<Color>(Colors.green),
+                  ),
+                  child: const Text('New Key'),
                 ),
-                child: const Text('Continue with current key'),
-              ),
-            ],
-          ),
-          const SizedBox(height: 140)
-        ],
+                ElevatedButton(
+                  onPressed: () {
+                    _newChatScreen(context);
+                  },
+                  style: ButtonStyle(
+                    backgroundColor:
+                        MaterialStateProperty.all<Color>(Colors.green),
+                  ),
+                  child: const Text('Continue with current key'),
+                ),
+              ],
+            ),
+            const SizedBox(height: 140)
+          ],
+        ),
       ),
     );
   }

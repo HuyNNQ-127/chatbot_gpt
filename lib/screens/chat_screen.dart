@@ -1,5 +1,5 @@
 // ignore_for_file: avoid_print, use_build_context_synchronously
-
+import 'package:chatbot_gpt/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:chatbot_gpt/widgets/chat_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -136,6 +136,11 @@ class _ChatScreenState extends State<ChatScreen> {
     }
   }
 
+  void _newHomeScreen(BuildContext context) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (ctx) => const HomeScreen()));
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
@@ -165,6 +170,13 @@ class _ChatScreenState extends State<ChatScreen> {
               "ChatGPT",
               style: TextStyle(color: Colors.white),
             ),
+            actions: [
+              IconButton(
+                  onPressed: () {
+                    _newHomeScreen(context);
+                  },
+                  icon: const Icon(Icons.key_outlined)),
+            ],
           ),
           body: SafeArea(
             child: Column(

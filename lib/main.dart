@@ -1,7 +1,6 @@
-import 'package:chatbot_gpt/screens/chat_screen.dart';
-import 'package:chatbot_gpt/screens/home_screen.dart';
+import 'package:chatbot_gpt/screens/summerize_screen.dart';
+import 'package:chatbot_gpt/screens/tabscreen.dart';
 import 'package:flutter/material.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 
@@ -25,19 +24,7 @@ class MyApp extends StatelessWidget {
           color: Color(0xFF444654),
         ),
       ),
-      home: StreamBuilder(
-          stream: FirebaseFirestore.instance
-              .collection("ChatGPT")
-              .doc("test_instance")
-              .snapshots(),
-          builder: (ctx, snapshot) {
-            final document = snapshot.data;
-            Map<String, dynamic>? data = document?.data();
-            if (data?["previous_api_existed"] == true) {
-              return const ChatScreen();
-            }
-            return const HomeScreen();
-          }),
+      home: const SummarizeScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

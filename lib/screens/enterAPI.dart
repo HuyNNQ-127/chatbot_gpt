@@ -1,4 +1,3 @@
-import 'package:chatbot_gpt/screens/home_screen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:chatbot_gpt/screens/chat_screen.dart';
 import 'package:flutter/material.dart';
@@ -8,26 +7,30 @@ class EnterAPI extends StatefulWidget {
   const EnterAPI({super.key});
   @override
   State<StatefulWidget> createState() {
-    return EnterAPIState();
+    return _EnterAPI();
   }
 }
 
-class EnterAPIState extends State<EnterAPI> {
+class _EnterAPI extends State<EnterAPI> {
   final _form = GlobalKey<FormState>();
   var _enteredAPI = "";
   bool? _isAPI;
-  var _submitComplete;
-
   Future<bool> checkApiKey(String apiKey) async {
     final response = await http.get(
       Uri.parse("https://api.openai.com/v1/models"),
       headers: {"Authorization": "Bearer $apiKey"},
     );
+
     if (response.statusCode == 200) {
       _isAPI = true;
       return true;
     }
     return false;
+  }
+
+  void _newChatScreen(BuildContext context) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (ctx) => const ChatScreen()));
   }
 
   Future<void> _submit() async {
@@ -37,16 +40,12 @@ class EnterAPIState extends State<EnterAPI> {
     }
     var collection = FirebaseFirestore.instance.collection('ChatGPT');
     if (_isAPI == true) {
-      collection
-          .doc("test_instance")
-          .update({"API_Key": _enteredAPI, "previous_api_existed": "true"});
-      //  _submitComplete = true;
+      collection.doc("test_instance").update({
+        "API_Key": _enteredAPI,
+        "previous_api_existed": true,
+      });
+      _newChatScreen(context);
     }
-  }
-
-  void _newChatScreen(BuildContext context) {
-    Navigator.of(context)
-        .push(MaterialPageRoute(builder: (ctx) => const ChatScreen()));
   }
 
   @override
@@ -65,7 +64,8 @@ class EnterAPIState extends State<EnterAPI> {
                   left: 20,
                   right: 20,
                 ),
-                width: 500,
+                width: 300,
+                height: 300,
                 child: Image.asset("assets/logo.png"),
               ),
               Card(
@@ -79,8 +79,6 @@ class EnterAPIState extends State<EnterAPI> {
                         mainAxisSize: MainAxisSize.min,
                         children: [
                           TextFormField(
-                            decoration:
-                                const InputDecoration(labelText: "Api Key"),
                             autocorrect: false,
                             textCapitalization: TextCapitalization.none,
                             onChanged: (value) async {
@@ -95,8 +93,8 @@ class EnterAPIState extends State<EnterAPI> {
                               if (value.trim().length != 51) {
                                 return "Invalid API key length!";
                               }
-                              if (!_isAPI!) {
-                                return "API Key does not exist!";
+                              if (_isAPI == false) {
+                                return "API Key does not exist.";
                               }
                               return null;
                             },
@@ -106,15 +104,13 @@ class EnterAPIState extends State<EnterAPI> {
                           ),
                           const SizedBox(height: 12),
                           ElevatedButton(
-                            onPressed: () {
-                              _submit;
-                              _newChatScreen(context);
-                            },
-                            style: ButtonStyle(
-                              backgroundColor: MaterialStateProperty.all<Color>(
-                                  Colors.green),
+                            onPressed: _submit,
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: Theme.of(context)
+                                  .colorScheme
+                                  .primaryContainer,
                             ),
-                            child: const Text("Submit"),
+                            child: const Text("Submit key"),
                           )
                         ],
                       ),

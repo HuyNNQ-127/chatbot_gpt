@@ -1,4 +1,5 @@
 // ignore_for_file: unused_local_variable, unused_field, avoid_print, prefer_interpolation_to_compose_strings, empty_catches, non_constant_identifier_names, prefer_typing_uninitialized_variables
+import 'package:chatbot_gpt/screens/chat_screen.dart';
 import 'package:chatbot_gpt/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
@@ -13,7 +14,7 @@ class TabsScreen extends StatefulWidget {
   }
 }
 
-Widget test = EnterAPI();
+Widget test = const HomeScreen();
 
 class _TabsScreenState extends State<TabsScreen> {
   final _form = GlobalKey<FormState>();
@@ -56,21 +57,26 @@ class _TabsScreenState extends State<TabsScreen> {
     return apikey;
   }
 
+  Future<void> _getAPIState() async {
+    var collection = FirebaseFirestore.instance.collection('ChatGPT');
+    var docSnapshot = await collection.doc('test_instance').get();
+    Map<String, dynamic> data = docSnapshot.data()!;
+    api_status = data["previous_api_existed"];
+  }
+
   @override
   Widget build(BuildContext context) {
-    setState(
-        () {}); /*
-    if (checkApiKey(apikey) == true && apikey != '') {
-      test = const HomeScreen();
-    } else {
-      if (checkApiKey(apikey) == false || apikey == '') {
-        test = EnterAPI();
+    if (_getAPIState() == true) {
+      if (checkApiKey(_getAPI().toString()) == true) {
+        test = const ChatScreen();
       }
-    }*/
+    } else {
+      test = const EnterAPI();
+    }
 
     return Scaffold(
       backgroundColor: Colors.blue.shade100,
-      body: test = HomeScreen(),
+      body: test,
     );
   }
 }

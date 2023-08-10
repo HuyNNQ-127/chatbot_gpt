@@ -1,7 +1,6 @@
 // ignore_for_file: unused_local_variable, unused_field, avoid_print, prefer_interpolation_to_compose_strings, empty_catches, non_constant_identifier_names, prefer_typing_uninitialized_variables
 import 'package:chatbot_gpt/screens/chat_screen.dart';
 import 'package:chatbot_gpt/screens/enterAPI.dart';
-import 'package:chatbot_gpt/screens/summerize_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -94,15 +93,6 @@ class _HomeScreenState extends State<HomeScreen> {
   void _newEnterAPI(BuildContext context) {
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (ctx) => const EnterAPI()));
-  }
-
-  String _keyToken() {
-    var usedKey = apikey;
-
-    var key = usedKey.substring(0, 3) +
-        '***********' +
-        usedKey.substring(usedKey.length - 4, usedKey.length);
-    return key;
   }
 
   @override

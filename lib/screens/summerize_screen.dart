@@ -1,12 +1,14 @@
+// ignore_for_file: non_constant_identifier_names
 import 'package:chatbot_gpt/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:chatbot_gpt/widgets/chat_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
-import 'package:dart_openai/dart_openai.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:langchain/langchain.dart';
+import 'package:collection/collection.dart';
+import 'package:langchain_openai/langchain_openai.dart';
 
 class SummarizeScreen extends StatefulWidget {
   const SummarizeScreen({super.key});
@@ -22,7 +24,7 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
   bool _speaking = false;
   late SpeechToText _speechTransform;
   String _checkconnect = "true";
-
+  late RetrievalQAChain retrieverQA;
   late TextEditingController textEditingController;
 
   @override
@@ -39,10 +41,7 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
   }
 
   void _submitMessage() async {
-    var collection = FirebaseFirestore.instance.collection('ChatGPT');
-    var docSnapshot = await collection.doc('test_instance').get();
-    Map<String, dynamic> data = docSnapshot.data()!;
-    OpenAI.apiKey = data["API_Key"];
+    String msg = textEditingController.text;
 
     if (textEditingController.text.trim().isEmpty) {
       return;
@@ -54,7 +53,6 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
       });
     }
 
-    String msg = textEditingController.text;
     _isTyping = true;
     textEditingController.clear();
 
@@ -64,41 +62,45 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
       "Timestamp": Timestamp.now(),
     });
 
-    OpenAIChatCompletionModel chatgpt = await OpenAI.instance.chat.create(
-      model: "gpt-3.5-turbo",
-      messages: [
-        OpenAIChatCompletionChoiceMessageModel(
-            role: OpenAIChatMessageRole.user, content: msg)
-      ],
-    );
-    print(chatgpt.choices[0].message.content);
-    _isTyping = false;
+    //try {
+    final response = await retrieverQA(msg);
+    final result = response["result"].toString();
+
+    FirebaseFirestore.instance
+        .collection("ChatGPT")
+        .doc("test_instance")
+        .update({"_textCorpus": response.toString()});
+
     FirebaseFirestore.instance.collection("Summarize").add({
-      "text": chatgpt.choices[0].message.content,
+      "text": result,
       "Index": 1,
       "Timestamp": Timestamp.now(),
     });
+    _isTyping = false;
+    /*} catch (error) {
+      if (error.toString().endsWith('statusCode: 429')) {
+        FirebaseFirestore.instance.collection("Summarize").add({
+          "text":
+              'Chạm ngưỡng giới hạn câu hỏi trong một khoảng thời gian ngắn.Xin chờ 30s trước khi hỏi tiếp',
+          "Index": 1,
+          "Timestamp": Timestamp.now(),
+        });
+      }
+      _isTyping = false;
+    }*/
+
     var collection_1 = FirebaseFirestore.instance.collection('Conversation');
     var docSnapshot_1 = await collection_1.doc('Chatbox').get();
     Map<String, dynamic> summary = docSnapshot_1.data()!;
 
     String conversation = summary["Total_conversation"].toString();
-    FirebaseFirestore.instance.collection("Conversation").doc("Chatbox").update(
-      {
-        "Total_conversation": conversation +
-            "\nHuman: " +
-            msg +
-            "\nGPT: " +
-            chatgpt.choices[0].message.content,
-      },
-    );
   }
 
   void _Listen() async {
     var collection = FirebaseFirestore.instance.collection('ChatGPT');
     var docSnapshot = await collection.doc('test_instance').get();
     Map<String, dynamic> data = docSnapshot.data()!;
-    _checkconnect = data["Connection"];
+    _checkconnect = data["_isConnect"];
     if (!_speaking) {
       bool availability = await _speechTransform.initialize(
         onStatus: (value) {
@@ -174,40 +176,109 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
             actions: [
               IconButton(
                   onPressed: () async {
-                    final result =
-                        await FilePicker.platform.pickFiles(withData: true);
-                    var collection =
-                        FirebaseFirestore.instance.collection('memory');
-                    var docSnapshot = await collection.doc('test1').get();
-                    Map<String, dynamic> data = docSnapshot.data()!;
-                    if (result == null) return;
-                    PlatformFile file = result.files.first;
-                    TextLoader loader = TextLoader(file.path!);
-                    final documents = await loader.load();
-                    const textSplitter = CharacterTextSplitter(
-                      chunkSize: 800,
-                      chunkOverlap: 0,
-                    );
+                    _newHomeScreen(context);
                   },
-                  icon: const Icon(Icons.upload)),
+                  icon: const Icon(Icons.key_outlined)),
             ],
           ),
           body: SafeArea(
             child: Column(
               children: [
-                Flexible(
-                  child: ListView.builder(
-                    reverse: true,
-                    itemCount: loadedMessages.length,
-                    itemBuilder: (context, index) {
-                      final chatMessage = loadedMessages[index].data();
-                      return ChatWidget(
-                        message: chatMessage["text"],
-                        chatIndex: chatMessage["Index"],
-                      );
-                    },
+                if (loadedMessages.isEmpty)
+                  Expanded(
+                    child: Center(
+                      child: OutlinedButton.icon(
+                        onPressed: () async {
+                          var collection_1 =
+                              FirebaseFirestore.instance.collection('ChatGPT');
+                          var docSnapshot_1 =
+                              await collection_1.doc('test_instance').get();
+                          Map<String, dynamic> data_1 = docSnapshot_1.data()!;
+
+                          final result = await FilePicker.platform
+                              .pickFiles(withData: true);
+
+                          if (result == null) {
+                            return;
+                          }
+
+                          PlatformFile file = result.files.first;
+                          TextLoader loader = TextLoader(file.path!);
+                          final document = await loader.load();
+
+                          const splittingText = CharacterTextSplitter(
+                            chunkSize: 700,
+                            chunkOverlap: 0,
+                          );
+
+                          final texts = splittingText.splitDocuments(document);
+                          final textsWithSources = texts
+                              .mapIndexed(
+                                (final i, final doc) => doc.copyWith(
+                                  metadata: {
+                                    ...doc.metadata,
+                                    'source': '$i-pl',
+                                  },
+                                ),
+                              )
+                              .toList(growable: false);
+
+                          final embedding =
+                              OpenAIEmbeddings(apiKey: data_1["API_Key"]);
+                          final docSearch =
+                              await MemoryVectorStore.fromDocuments(
+                            documents: textsWithSources,
+                            embeddings: embedding,
+                          );
+                          final chatgpt = ChatOpenAI(
+                            model: "gpt-3.5-turbo",
+                            temperature: 1.0,
+                            apiKey: data_1["API_Key"],
+                          );
+
+                          final qaChain =
+                              OpenAIQAWithSourcesChain(llm: chatgpt);
+
+                          final docPrompt = PromptTemplate.fromTemplate(
+                            //'You will be given a text document\n Answer based on the language of the question \n If you cannot find an answer related to the text, answer:"Không có dữ liệu về câu hỏi trong tài liệu!". ',
+                            'content: {page_content}\nSource: {source}',
+                          );
+
+                          final finalQAChain = StuffDocumentsChain(
+                            llmChain: qaChain,
+                            documentPrompt: docPrompt,
+                          );
+
+                          retrieverQA = RetrievalQAChain(
+                            retriever: docSearch.asRetriever(),
+                            combineDocumentsChain: finalQAChain,
+                          );
+                        },
+                        icon: const Icon(
+                          Icons.upload_file_outlined,
+                          color: Colors.white,
+                        ),
+                        label: const Text(
+                          "Upload File",
+                          style: TextStyle(color: Colors.white),
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  Flexible(
+                    child: ListView.builder(
+                      reverse: true,
+                      itemCount: loadedMessages.length,
+                      itemBuilder: (context, index) {
+                        final chatMessage = loadedMessages[index].data();
+                        return ChatWidget(
+                          message: chatMessage["text"],
+                          chatIndex: chatMessage["Index"],
+                        );
+                      },
+                    ),
                   ),
-                ),
                 if (_isTyping) ...[
                   const SpinKitThreeBounce(
                     color: Colors.white,

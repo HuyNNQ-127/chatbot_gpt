@@ -170,24 +170,6 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
         }
         final loadedMessages = chatSnapshots.data!.docs;
         return Scaffold(
-          appBar: AppBar(
-            elevation: 2,
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset("assets/openai_logo.jpg"),
-            ),
-            title: const Text(
-              "Summarizing text",
-              style: TextStyle(color: Colors.white),
-            ),
-            actions: [
-              IconButton(
-                  onPressed: () async {
-                    _newHomeScreen(context);
-                  },
-                  icon: const Icon(Icons.key_outlined)),
-            ],
-          ),
           body: SafeArea(
             child: Column(
               children: [

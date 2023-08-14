@@ -141,6 +141,17 @@ class _ChatScreenState extends State<ChatScreen> {
         .push(MaterialPageRoute(builder: (ctx) => const HomeScreen()));
   }
 
+  void _deleteconversation() async {
+    final instance = FirebaseFirestore.instance;
+    final batch = instance.batch();
+    var collection = instance.collection('Conversation');
+    var snapshots = await collection.get();
+    for (var doc in snapshots.docs) {
+      batch.delete(doc.reference);
+    }
+    await batch.commit();
+  }
+
   @override
   Widget build(BuildContext context) {
     return StreamBuilder(
@@ -160,24 +171,6 @@ class _ChatScreenState extends State<ChatScreen> {
         }
         final loadedMessages = chatSnapshots.data!.docs;
         return Scaffold(
-          appBar: AppBar(
-            elevation: 2,
-            leading: Padding(
-              padding: const EdgeInsets.all(8.0),
-              child: Image.asset("assets/openai_logo.jpg"),
-            ),
-            title: const Text(
-              "ChatGPT",
-              style: TextStyle(color: Colors.white),
-            ),
-            actions: [
-              IconButton(
-                  onPressed: () {
-                    _newHomeScreen(context);
-                  },
-                  icon: const Icon(Icons.key_outlined)),
-            ],
-          ),
           body: SafeArea(
             child: Column(
               children: [
@@ -237,7 +230,12 @@ class _ChatScreenState extends State<ChatScreen> {
                             Icons.send,
                             color: Colors.white,
                           ),
-                        )
+                        ),
+                        IconButton(
+                            onPressed: () {
+                              _deleteconversation;
+                            },
+                            icon: Icon(Icons.delete))
                       ],
                     ),
                   ),

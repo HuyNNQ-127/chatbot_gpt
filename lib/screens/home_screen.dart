@@ -57,6 +57,7 @@ class _HomeScreenState extends State<HomeScreen> {
       collection.doc("test_instance").update({
         "API_Key": _enteredAPI,
         "previous_api_existed": true,
+        "_isConnect": true,
       });
       screen_index = 1;
     }
@@ -82,6 +83,7 @@ class _HomeScreenState extends State<HomeScreen> {
     collection.doc("test_instance").update({
       "API_Key": '',
       "previous_api_existed": false,
+      "_isConnect": false,
     });
   }
 

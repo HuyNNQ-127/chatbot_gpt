@@ -13,14 +13,15 @@ Created during Brycen Internship program
 
 ## Usage
 -Having engaging conversations with OpenAI's ChatGPT 3.5 LLM model
+
 -Summarize key infomation from text files and audio files and ask questions about them!
 
 # HOW TO RUN THIS APP 
 
 ## I. Prerequisites
 
-- **INSTALLED:** [Flutter](https://docs.flutter.dev/get-started/install)(version in "pubspec.lock"),[VSCode](https://code.visualstudio.com/)(v1.81.1), [Git](https://git-scm.com/downloads)(v2.41.0)
-- **OPENAI API KEY** You must have an OpenAI API key in order to use this application. You can obtain a key on this website [OpenAI](http://api.openai.com/v1/models) (Required an OpenAI account)
+- **INSTALLED:**  [Flutter](https://docs.flutter.dev/get-started/install) (version in "pubspec.lock"), [VSCode](https://code.visualstudio.com/) (v1.81.1), [Git](https://git-scm.com/downloads) (v2.41.0)
+- **OPENAI API KEY:**  You must have an OpenAI API key in order to use this application. You can obtain a key on this website [OpenAI](http://api.openai.com/v1/models) (Required an OpenAI account)
 
 
 ## II. Setup the application

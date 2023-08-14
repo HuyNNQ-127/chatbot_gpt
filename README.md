@@ -20,12 +20,12 @@ Created during Brycen Internship program
 
 ## I. Prerequisites
 
-- **INSTALLED:**  [Flutter](https://docs.flutter.dev/get-started/install) (version 3.10.5), [VSCode](https://code.visualstudio.com/) (v1.81.1), [Git](https://git-scm.com/downloads) (v2.41.0)
+- **INSTALLED:**  [Flutter](https://docs.flutter.dev/get-started/install) (v.3.10.5), [VSCode](https://code.visualstudio.com/) (v1.81.1), [Git](https://git-scm.com/downloads) (v2.41.0)
 - **OPENAI API KEY:**  You must have an OpenAI API key in order to use this application. You can obtain a key on this website [OpenAI](http://api.openai.com/v1/models) (Required an OpenAI account)
 
 
 ## II. Setup the application
-### 1. Using Git to pull the project into your computer
+### 1. Using Git to download the project into your computer
 
 - Goto the folder where you want to place the app.
 - Open git by enter cmd into the address bar of the folder and then type:

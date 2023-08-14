@@ -49,6 +49,7 @@ dependencies:
   flutter_tts: ^3.7.0
   file_picker: ^5.3.3
   langchain: ^0.0.5
+  langchain_openai: ^0.0.5
 
 dev_dependencies:
   flutter_test:

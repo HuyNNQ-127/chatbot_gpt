@@ -1,6 +1,7 @@
 // ignore_for_file: unused_local_variable, unused_field, avoid_print, prefer_interpolation_to_compose_strings, empty_catches, non_constant_identifier_names, prefer_typing_uninitialized_variables
 import 'package:chatbot_gpt/screens/chat_screen.dart';
 import 'package:chatbot_gpt/screens/enterAPI.dart';
+import 'package:chatbot_gpt/screens/tabscreen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -89,7 +90,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   void _newChatScreen(BuildContext context) {
     Navigator.of(context)
-        .push(MaterialPageRoute(builder: (ctx) => const ChatScreen()));
+        .push(MaterialPageRoute(builder: (ctx) => const TabsScreen()));
   }
 
   void _newEnterAPI(BuildContext context) {

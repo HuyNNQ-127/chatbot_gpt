@@ -24,7 +24,7 @@ class MyApp extends StatelessWidget {
           color: Color(0xFF444654),
         ),
       ),
-      home: const SummarizeScreen(),
+      home: const TabsScreen(),
       debugShowCheckedModeBanner: false,
     );
   }

@@ -1,6 +1,6 @@
 #CHATGPT POWERED CHATBOT
 
-An application that utilize OpenAI's ChatGPT-3.5 LLM in order to summerize content
+An application that utilize OpenAI's ChatGPT-3.5 LLM in order to summarize content
 
 Created during Brycen Internship program
 
@@ -20,7 +20,7 @@ Created during Brycen Internship program
 
 ## I. Prerequisites
 
-- **INSTALLED:**  [Flutter](https://docs.flutter.dev/get-started/install) (version in "pubspec.lock"), [VSCode](https://code.visualstudio.com/) (v1.81.1), [Git](https://git-scm.com/downloads) (v2.41.0)
+- **INSTALLED:**  [Flutter](https://docs.flutter.dev/get-started/install) (version 3.10.5), [VSCode](https://code.visualstudio.com/) (v1.81.1), [Git](https://git-scm.com/downloads) (v2.41.0)
 - **OPENAI API KEY:**  You must have an OpenAI API key in order to use this application. You can obtain a key on this website [OpenAI](http://api.openai.com/v1/models) (Required an OpenAI account)
 
 

@@ -26,6 +26,7 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
   String _checkconnect = "true";
   late RetrievalQAChain retrieverQA;
   late TextEditingController textEditingController;
+  dynamic textsWithSources = {};
 
   @override
   void initState() {
@@ -62,32 +63,38 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
       "Timestamp": Timestamp.now(),
     });
 
-    //try {
-    final response = await retrieverQA(msg);
-    final result = response["result"].toString();
+    try {
+      final res = await retrieverQA(msg);
+      FirebaseFirestore.instance
+          .collection("ChatGPT")
+          .doc("test_instance")
+          .update({"_textCorpus": res.toString()});
 
-    FirebaseFirestore.instance
-        .collection("ChatGPT")
-        .doc("test_instance")
-        .update({"_textCorpus": response.toString()});
+      FirebaseFirestore.instance.collection("Summarize").add({
+        "text": res["result"].toString(),
+        "Index": 1,
+        "Timestamp": Timestamp.now(),
+      });
 
-    FirebaseFirestore.instance.collection("Summarize").add({
-      "text": result,
-      "Index": 1,
-      "Timestamp": Timestamp.now(),
-    });
-    _isTyping = false;
-    /*} catch (error) {
-      if (error.toString().endsWith('statusCode: 429')) {
-        FirebaseFirestore.instance.collection("Summarize").add({
+      _isTyping = false;
+    } catch (e) {
+      if (e.toString().endsWith("statusCode: 429}")) {
+        FirebaseFirestore.instance.collection("chatSummarize").add({
           "text":
-              'Chạm ngưỡng giới hạn câu hỏi trong một khoảng thời gian ngắn.Xin chờ 30s trước khi hỏi tiếp',
+              "Giới hạn câu hỏi 3 câu hỏi / 1 phút. Vui lòng thêm thanh toán hoặc đợi 20 giây.",
+          "createdAt": Timestamp.now(),
           "Index": 1,
-          "Timestamp": Timestamp.now(),
+        });
+      } else {
+        FirebaseFirestore.instance.collection("chatSummarize").add({
+          "text": "Câu hỏi của bạn không có trong tài liệu",
+          "createdAt": Timestamp.now(),
+          "Index": 1,
         });
       }
+
       _isTyping = false;
-    }*/
+    }
 
     var collection_1 = FirebaseFirestore.instance.collection('Conversation');
     var docSnapshot_1 = await collection_1.doc('Chatbox').get();
@@ -204,28 +211,27 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
 
                           PlatformFile file = result.files.first;
                           TextLoader loader = TextLoader(file.path!);
-                          final document = await loader.load();
+                          final docs = await loader.load();
 
                           const splittingText = CharacterTextSplitter(
-                            chunkSize: 700,
+                            chunkSize: 500,
                             chunkOverlap: 0,
                           );
-
-                          final texts = splittingText.splitDocuments(document);
-                          final textsWithSources = texts
+                          final texts = splittingText.splitDocuments(docs);
+                          textsWithSources = texts
                               .mapIndexed(
-                                (final i, final doc) => doc.copyWith(
+                                (final i, final d) => d.copyWith(
                                   metadata: {
-                                    ...doc.metadata,
+                                    ...d.metadata,
                                     'source': '$i-pl',
                                   },
                                 ),
                               )
-                              .toList(growable: false);
+                              .toList();
 
-                          final embedding =
+                          dynamic embedding =
                               OpenAIEmbeddings(apiKey: data_1["API_Key"]);
-                          final docSearch =
+                          dynamic docSearch =
                               await MemoryVectorStore.fromDocuments(
                             documents: textsWithSources,
                             embeddings: embedding,
@@ -240,8 +246,8 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
                               OpenAIQAWithSourcesChain(llm: chatgpt);
 
                           final docPrompt = PromptTemplate.fromTemplate(
-                            //'You will be given a text document\n Answer based on the language of the question \n If you cannot find an answer related to the text, answer:"Không có dữ liệu về câu hỏi trong tài liệu!". ',
-                            'content: {page_content}\nSource: {source}',
+                            'You will be given a text document\n Answer based on the language of the question \n If you cannot find an answer related to the text, answer:"Không có dữ liệu về câu hỏi trong tài liệu!". ',
+                            //'content: {page_content}\nSource: {source}',
                           );
 
                           final finalQAChain = StuffDocumentsChain(

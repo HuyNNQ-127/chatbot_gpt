@@ -1,4 +1,7 @@
 // ignore_for_file: non_constant_identifier_names
+import 'dart:convert';
+import 'dart:io';
+
 import 'package:chatbot_gpt/screens/home_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:chatbot_gpt/widgets/chat_widget.dart';
@@ -8,7 +11,9 @@ import 'package:speech_to_text/speech_to_text.dart';
 import 'package:file_picker/file_picker.dart';
 import 'package:langchain/langchain.dart';
 import 'package:collection/collection.dart';
+import 'package:mime/mime.dart';
 import 'package:langchain_openai/langchain_openai.dart';
+import 'package:dart_openai/dart_openai.dart' as openai;
 
 class SummarizeScreen extends StatefulWidget {
   const SummarizeScreen({super.key});
@@ -43,6 +48,9 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
 
   void _submitMessage() async {
     String msg = textEditingController.text;
+    var collection = FirebaseFirestore.instance.collection('ChatGPT');
+    var docSnapshot = await collection.doc('test_instance').get();
+    Map<String, dynamic> data = docSnapshot.data()!;
 
     if (textEditingController.text.trim().isEmpty) {
       return;
@@ -64,43 +72,45 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
     });
 
     try {
-      final res = await retrieverQA(msg);
+      RetrievalQAChain test;
+      test = await readFile(data["FilePath"], data["API_Key"], data["Content"]);
+      setState(() {
+        retrieverQA = test;
+      });
+
+      final response = await retrieverQA(msg);
       FirebaseFirestore.instance
           .collection("ChatGPT")
           .doc("test_instance")
-          .update({"_textCorpus": res.toString()});
+          .update({"Document": response.toString()});
 
       FirebaseFirestore.instance.collection("Summarize").add({
-        "text": res["result"].toString(),
+        "text": response["result"].toString(),
         "Index": 1,
         "Timestamp": Timestamp.now(),
       });
 
       _isTyping = false;
-    } catch (e) {
-      if (e.toString().endsWith("statusCode: 429}")) {
-        FirebaseFirestore.instance.collection("chatSummarize").add({
-          "text":
-              "Giới hạn câu hỏi 3 câu hỏi / 1 phút. Vui lòng thêm thanh toán hoặc đợi 20 giây.",
-          "createdAt": Timestamp.now(),
-          "Index": 1,
-        });
+    } catch (error) {
+      if (error.toString().endsWith("statusCode: 429}")) {
+        if (error is openai.RequestFailedException) {
+          FirebaseFirestore.instance.collection("Summarize").add({
+            "text": error.message,
+            "Index": 1,
+            "Timestamp": Timestamp.now(),
+          });
+        }
       } else {
-        FirebaseFirestore.instance.collection("chatSummarize").add({
-          "text": "Câu hỏi của bạn không có trong tài liệu",
-          "createdAt": Timestamp.now(),
+        FirebaseFirestore.instance.collection("Summarize").add({
+          "text":
+              "Dữ liệu có trong câu hỏi không có trong văn bản, xin hãy hỏi câu khác.",
           "Index": 1,
+          "Timestamp": Timestamp.now(),
         });
       }
 
       _isTyping = false;
     }
-
-    var collection_1 = FirebaseFirestore.instance.collection('Conversation');
-    var docSnapshot_1 = await collection_1.doc('Chatbox').get();
-    Map<String, dynamic> summary = docSnapshot_1.data()!;
-
-    String conversation = summary["Total_conversation"].toString();
   }
 
   void _Listen() async {
@@ -146,9 +156,143 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
     }
   }
 
+  Future<void> uploadFile() async {
+    final result = await FilePicker.platform.pickFiles(withData: true);
+    if (result == null) {
+      return;
+    }
+
+    PlatformFile file = result.files.first;
+
+    final TypePath = lookupMimeType(file.path!);
+
+    var collection = FirebaseFirestore.instance.collection('ChatGPT');
+    var docSnapshot = await collection.doc('test_instance').get();
+    Map<String, dynamic> data = docSnapshot.data()!;
+
+    await FirebaseFirestore.instance
+        .collection("ChatGPT")
+        .doc("test_instance")
+        .update(
+      {
+        "_textCorpus": "",
+        "Document": "",
+      },
+    );
+    openai.OpenAI.apiKey = data["API_Key"];
+    if (TypePath == ("text/plain")) {
+      String convertedValue = utf8.decode(file.bytes!);
+      await FirebaseFirestore.instance
+          .collection("ChatGPT")
+          .doc("test_instance")
+          .update({"Content": formatString(convertedValue)});
+    }
+
+    if (TypePath == "audio/mpeg") {
+      openai.OpenAIAudioModel transcription =
+          await openai.OpenAI.instance.audio.createTranscription(
+        file: File(file.path!),
+        model: "whisper-1",
+        responseFormat: openai.OpenAIAudioResponseFormat.json,
+      );
+      await FirebaseFirestore.instance
+          .collection("ChatGPT")
+          .doc("test_instance")
+          .update({"Content": formatString(transcription.text)});
+    }
+
+    retrieverQA = await readFile(file.path!, data["API_Key"], data["Content"]);
+  }
+
   void _newHomeScreen(BuildContext context) {
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (ctx) => const HomeScreen()));
+  }
+
+  Future<RetrievalQAChain> readFile(
+      String Path, String API, String content) async {
+    FirebaseFirestore.instance
+        .collection("ChatGPT")
+        .doc("test_instance")
+        .update({"FilePath": Path});
+    List<Document> documents = [];
+    List<String> URLs = [];
+    if (content.isNotEmpty) {
+      documents.add(
+          Document(pageContent: content, metadata: const {"source": "local"}));
+    } else {
+      print("This is file Path");
+      URLs.clear();
+      URLs.add(Path);
+
+      WebBaseLoader loader = WebBaseLoader(URLs);
+      documents = await loader.load();
+    }
+
+    const textSplitter = CharacterTextSplitter(
+      chunkSize: 500,
+      chunkOverlap: 0,
+    );
+    final texts = textSplitter.splitDocuments(documents);
+    final textsWithSources = texts
+        .mapIndexed(
+          (final i, final d) => d.copyWith(
+            metadata: {
+              ...d.metadata,
+              'source': '$i-pl',
+            },
+          ),
+        )
+        .toList(growable: false);
+    final embeddings = OpenAIEmbeddings(apiKey: API);
+    final docSearch = await MemoryVectorStore.fromDocuments(
+      documents: textsWithSources,
+      embeddings: embeddings,
+    );
+
+    final chatgpt = ChatOpenAI(
+      apiKey: API,
+      model: 'gpt-3.5-turbo',
+      temperature: 1,
+    );
+
+    final qaChain = OpenAIQAWithSourcesChain(llm: chatgpt);
+    final docPrompt = PromptTemplate.fromTemplate(
+      'You will be given a text document\n Answer based on the language of the question \n If you cannot find an answer related to the text, answer:"Không có dữ liệu về câu hỏi trong tài liệu!". ',
+    );
+    final finalQAChain = StuffDocumentsChain(
+      llmChain: qaChain,
+      documentPrompt: docPrompt,
+    );
+
+    return RetrievalQAChain(
+      retriever: docSearch.asRetriever(),
+      combineDocumentsChain: finalQAChain,
+    );
+  }
+
+  String formatString(String input) {
+    List<String> sentences = input.split(RegExp(r'(?<=[.!?])'));
+    List<String> lines = [];
+    String currentLine = '';
+
+    for (String sentence in sentences) {
+      String updatedSentence = sentence.trim();
+
+      if (currentLine.isEmpty) {
+        currentLine = updatedSentence;
+      } else if ((currentLine.length + 1 + updatedSentence.length) <= 1650) {
+        currentLine += ' ' + updatedSentence;
+      } else {
+        lines.add(currentLine);
+        currentLine = updatedSentence;
+      }
+    }
+
+    if (currentLine.isNotEmpty) {
+      lines.add(currentLine);
+    }
+    return lines.join('\n\n');
   }
 
   @override
@@ -178,69 +322,7 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
                     child: Center(
                       child: OutlinedButton.icon(
                         onPressed: () async {
-                          var collection_1 =
-                              FirebaseFirestore.instance.collection('ChatGPT');
-                          var docSnapshot_1 =
-                              await collection_1.doc('test_instance').get();
-                          Map<String, dynamic> data_1 = docSnapshot_1.data()!;
-
-                          final result = await FilePicker.platform
-                              .pickFiles(withData: true);
-
-                          if (result == null) {
-                            return;
-                          }
-
-                          PlatformFile file = result.files.first;
-                          TextLoader loader = TextLoader(file.path!);
-                          final docs = await loader.load();
-
-                          const splittingText = CharacterTextSplitter(
-                            chunkSize: 500,
-                            chunkOverlap: 0,
-                          );
-                          final texts = splittingText.splitDocuments(docs);
-                          textsWithSources = texts
-                              .mapIndexed(
-                                (final i, final d) => d.copyWith(
-                                  metadata: {
-                                    ...d.metadata,
-                                    'source': '$i-pl',
-                                  },
-                                ),
-                              )
-                              .toList();
-
-                          dynamic embedding =
-                              OpenAIEmbeddings(apiKey: data_1["API_Key"]);
-                          dynamic docSearch =
-                              await MemoryVectorStore.fromDocuments(
-                            documents: textsWithSources,
-                            embeddings: embedding,
-                          );
-                          final chatgpt = ChatOpenAI(
-                            model: "gpt-3.5-turbo",
-                            temperature: 1.0,
-                            apiKey: data_1["API_Key"],
-                          );
-
-                          final qaChain =
-                              OpenAIQAWithSourcesChain(llm: chatgpt);
-
-                          final docPrompt = PromptTemplate.fromTemplate(
-                            'You will be given a text document\n Answer based on the language of the question \n If you cannot find an answer related to the text, answer:"Không có dữ liệu về câu hỏi trong tài liệu!". ',
-                            //'content: {page_content}\nSource: {source}',
-                          );
-
-                          final finalQAChain = StuffDocumentsChain(
-                            llmChain: qaChain,
-                            documentPrompt: docPrompt,
-                          );
-
-                          retrieverQA = RetrievalQAChain(
-                            retriever: docSearch.asRetriever(),
-                            combineDocumentsChain: finalQAChain,
-                          );
+                          uploadFile();
                         },
                         icon: const Icon(
                           Icons.upload_file_outlined,

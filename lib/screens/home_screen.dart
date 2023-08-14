@@ -109,7 +109,7 @@ class _HomeScreenState extends State<HomeScreen> {
           children: [
             Container(
               margin: const EdgeInsets.only(
-                top: 250,
+                top: 100,
                 bottom: 20,
                 left: 20,
                 right: 20,

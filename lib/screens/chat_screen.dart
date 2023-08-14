@@ -77,14 +77,14 @@ class _ChatScreenState extends State<ChatScreen> {
       "Index": 1,
       "Timestamp": Timestamp.now(),
     });
-    var collection_1 = FirebaseFirestore.instance.collection('Conversation');
-    var docSnapshot_1 = await collection_1.doc('Chatbox').get();
-    Map<String, dynamic> summary = docSnapshot_1.data()!;
 
-    String conversation = summary["Total_conversation"].toString();
-    FirebaseFirestore.instance.collection("Conversation").doc("Chatbox").update(
+    String conversation = data["ChatScreen"].toString();
+    FirebaseFirestore.instance
+        .collection("ChatGPT")
+        .doc("test_instance")
+        .update(
       {
-        "Total_conversation": conversation +
+        "ChatScreen": conversation +
             "\nHuman: " +
             msg +
             "\nGPT: " +
@@ -139,17 +139,6 @@ class _ChatScreenState extends State<ChatScreen> {
   void _newHomeScreen(BuildContext context) {
     Navigator.of(context)
         .push(MaterialPageRoute(builder: (ctx) => const HomeScreen()));
-  }
-
-  void _deleteconversation() async {
-    final instance = FirebaseFirestore.instance;
-    final batch = instance.batch();
-    var collection = instance.collection('Conversation');
-    var snapshots = await collection.get();
-    for (var doc in snapshots.docs) {
-      batch.delete(doc.reference);
-    }
-    await batch.commit();
   }
 
   @override
@@ -231,11 +220,6 @@ class _ChatScreenState extends State<ChatScreen> {
                             color: Colors.white,
                           ),
                         ),
-                        IconButton(
-                            onPressed: () {
-                              _deleteconversation;
-                            },
-                            icon: Icon(Icons.delete))
                       ],
                     ),
                   ),

@@ -10,6 +10,7 @@ import 'package:flutter_advanced_drawer/flutter_advanced_drawer.dart';
 
 class TabsScreen extends StatefulWidget {
   const TabsScreen({super.key});
+
   @override
   State<StatefulWidget> createState() {
     return _TabsScreenState();
@@ -82,8 +83,20 @@ class _TabsScreenState extends State<TabsScreen> {
     }
   }
 
+  void _newEnterAPI(BuildContext context) {
+    Navigator.of(context)
+        .push(MaterialPageRoute(builder: (ctx) => const EnterAPI()));
+  }
+
   @override
   Widget build(BuildContext context) {
+    if (_getAPIState() == false) {
+      return const EnterAPI();
+    } else {
+      if (_getAPIState() == true) {
+        item = 'chatting';
+      }
+    }
     void _handleMenuButtonPressed() {
       drawer.showDrawer();
     }
@@ -97,75 +110,6 @@ class _TabsScreenState extends State<TabsScreen> {
       }
       return const ChatScreen();
     }
-
-    Future alert() => showDialog(
-        context: context,
-        builder: (context) {
-          dialog_context = context;
-          return AlertDialog(
-            title: const Text("Nhập API Key mới"),
-            content: Form(
-              key: _form,
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  TextFormField(
-                    cursorColor: Colors.blueAccent,
-                    autocorrect: false,
-                    textCapitalization: TextCapitalization.none,
-                    decoration: const InputDecoration(
-                        enabledBorder: OutlineInputBorder(
-                            borderSide: BorderSide(color: Colors.blueAccent),
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(100))),
-                        border: OutlineInputBorder(
-                            borderRadius:
-                                BorderRadius.all(Radius.circular(100))),
-                        hintText: "Nhập API Key ở đây",
-                        hintStyle: TextStyle(fontSize: 15, color: Colors.grey)),
-                    onChanged: (value) async {
-                      final check = await checkApiKey(value);
-                      setState(() => _isAPI = check);
-                    },
-                    validator: (value) {
-                      if (value == null || value.trim().isEmpty) {
-                        return "Không được để trống API key.";
-                      }
-
-                      if (value.trim().length != 51) {
-                        return "Độ dài API Key không hợp lệ.";
-                      }
-                      if (!_isAPI!) {
-                        return "API Key không tồn tại.";
-                      }
-                      return null;
-                    },
-                    onSaved: (value) {
-                      _enteredAPI = value!;
-                    },
-                  ),
-                  ElevatedButton(
-                    onPressed: _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor:
-                          Theme.of(context).colorScheme.primaryContainer,
-                    ),
-                    child: const Text("Sumbit"),
-                  )
-                ],
-              ),
-            ),
-          );
-        });
-
-    /*
-    if (_getAPIState() == false) {
-      test = const EnterAPI();
-    }
-    return Scaffold(
-      backgroundColor: Colors.blue.shade100,
-      body: test,
-    );*/
 
     return AdvancedDrawer(
       backdrop: Container(
@@ -270,12 +214,24 @@ class _TabsScreenState extends State<TabsScreen> {
                     onPressed: () async {
                       final instance = FirebaseFirestore.instance;
                       final batch = instance.batch();
-                      var collection = instance.collection("Summarize");
+                      var collection = instance.collection("Conversation");
                       var snapshots = await collection.get();
                       for (var doc in snapshots.docs) {
                         batch.delete(doc.reference);
                       }
                       await batch.commit();
+                      var delete =
+                          FirebaseFirestore.instance.collection('ChatGPT');
+                      var docSnapshot = await delete.doc('test_instance').get();
+                      Map<String, dynamic> data = docSnapshot.data()!;
+                      FirebaseFirestore.instance
+                          .collection("ChatGPT")
+                          .doc("test_instance")
+                          .update(
+                        {
+                          "ChatScreen": '',
+                        },
+                      );
                     },
                     icon: const Icon(
                       Icons.delete,
@@ -291,6 +247,18 @@ class _TabsScreenState extends State<TabsScreen> {
                         batch.delete(doc.reference);
                       }
                       await batch.commit();
+                      var delete =
+                          FirebaseFirestore.instance.collection('ChatGPT');
+                      var docSnapshot = await delete.doc('test_instance').get();
+                      Map<String, dynamic> data = docSnapshot.data()!;
+                      FirebaseFirestore.instance
+                          .collection("ChatGPT")
+                          .doc("test_instance")
+                          .update(
+                        {
+                          "_textCorpus": '',
+                        },
+                      );
                     },
                     icon: const Icon(
                       Icons.delete,

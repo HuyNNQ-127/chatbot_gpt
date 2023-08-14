@@ -1,5 +1,5 @@
+import 'package:chatbot_gpt/screens/tabscreen.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
-import 'package:chatbot_gpt/screens/chat_screen.dart';
 import 'package:flutter/material.dart';
 import 'package:http/http.dart' as http;
 
@@ -30,7 +30,7 @@ class _EnterAPI extends State<EnterAPI> {
 
   void _newChatScreen(BuildContext context) {
     Navigator.of(context)
-        .push(MaterialPageRoute(builder: (ctx) => const ChatScreen()));
+        .push(MaterialPageRoute(builder: (ctx) => const TabsScreen()));
   }
 
   Future<void> _submit() async {
@@ -43,6 +43,7 @@ class _EnterAPI extends State<EnterAPI> {
       collection.doc("test_instance").update({
         "API_Key": _enteredAPI,
         "previous_api_existed": true,
+        "_isConnect": true,
       });
       _newChatScreen(context);
     }

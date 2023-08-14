@@ -1,9 +1,8 @@
 // ignore_for_file: non_constant_identifier_names
-import 'dart:convert';
-import 'dart:io';
-
 import 'package:chatbot_gpt/screens/home_screen.dart';
 import 'package:flutter/material.dart';
+import 'dart:convert';
+import 'dart:io';
 import 'package:chatbot_gpt/widgets/chat_widget.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter_spinkit/flutter_spinkit.dart';
@@ -201,7 +200,11 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
           .update({"Content": formatString(transcription.text)});
     }
 
-    retrieverQA = await readFile(file.path!, data["API_Key"], data["Content"]);
+    var document = await collection.doc('test_instance').get();
+    Map<String, dynamic> embed = document.data()!;
+
+    retrieverQA =
+        await readFile(file.path!, embed["API_Key"], embed["Content"]);
   }
 
   void _newHomeScreen(BuildContext context) {
@@ -216,17 +219,9 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
         .doc("test_instance")
         .update({"FilePath": Path});
     List<Document> documents = [];
-    List<String> URLs = [];
     if (content.isNotEmpty) {
       documents.add(
           Document(pageContent: content, metadata: const {"source": "local"}));
-    } else {
-      print("This is file Path");
-      URLs.clear();
-      URLs.add(Path);
-
-      WebBaseLoader loader = WebBaseLoader(URLs);
-      documents = await loader.load();
     }
 
     const textSplitter = CharacterTextSplitter(
@@ -236,10 +231,10 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
     final texts = textSplitter.splitDocuments(documents);
     final textsWithSources = texts
         .mapIndexed(
-          (final i, final d) => d.copyWith(
+          (final index, final doc) => doc.copyWith(
             metadata: {
-              ...d.metadata,
-              'source': '$i-pl',
+              ...doc.metadata,
+              'source': '$index-pl',
             },
           ),
         )
@@ -252,7 +247,7 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
 
     final chatgpt = ChatOpenAI(
       apiKey: API,
-      model: 'gpt-3.5-turbo',
+      model: 'gpt-3.5-turbo-0613',
       temperature: 1,
     );
 

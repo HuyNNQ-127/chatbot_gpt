@@ -11,7 +11,7 @@ Created during Brycen Internship program
 |---------------------------------------------|----------------------------------|---------------------------------------------------|
 | ![Chat UI](https://github.com/HuyNNQ-127/chatbot_gpt/blob/master/assets/Screenshot_1692008684.png) | ![Home UI](https://github.com/HuyNNQ-127/chatbot_gpt/blob/master/assets/Screenshot_1692008153.png) | ![Summarize UI](https://github.com/HuyNNQ-127/chatbot_gpt/blob/master/assets/Screenshot_1692008691.png) |
 
-## Usage
+## Feature!
 -Having engaging conversations with OpenAI's ChatGPT 3.5 LLM model
 
 -Summarize key infomation from text files and audio files and ask questions about them!

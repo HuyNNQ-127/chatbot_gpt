@@ -100,9 +100,9 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
           });
         }
       } else {
+        final response = await retrieverQA(msg);
         FirebaseFirestore.instance.collection("Summarize").add({
-          "text":
-              "Dữ liệu có trong câu hỏi không có trong văn bản, xin hãy hỏi câu khác.",
+          "text": response["result"].toString(),
           "Index": 1,
           "Timestamp": Timestamp.now(),
         });
@@ -252,9 +252,7 @@ class _SummarizeScreenState extends State<SummarizeScreen> {
     );
 
     final qaChain = OpenAIQAWithSourcesChain(llm: chatgpt);
-    final docPrompt = PromptTemplate.fromTemplate(
-      'You will be given a text document\n Answer based on the language of the question \n If you cannot find an answer related to the text, answer:"Không có dữ liệu về câu hỏi trong tài liệu!". ',
-    );
+    final docPrompt = PromptTemplate.fromTemplate('content: {page_content}');
     final finalQAChain = StuffDocumentsChain(
       llmChain: qaChain,
       documentPrompt: docPrompt,

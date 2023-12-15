@@ -256,7 +256,7 @@ class _TabsScreenState extends State<TabsScreen> {
                           .doc("test_instance")
                           .update(
                         {
-                          "_textCorpus": '',
+                          "Content": '',
                         },
                       );
                     },

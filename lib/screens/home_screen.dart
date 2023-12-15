@@ -100,6 +100,7 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
+    apikey = _getAPI().toString();
     return Scaffold(
       backgroundColor: Colors.blue.shade100,
       body: Form(
@@ -115,7 +116,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 right: 20,
               ),
               width: 250,
-              height: 250,
+              height: 150,
               decoration: BoxDecoration(
                 image: DecorationImage(
                   image: Image.asset(
@@ -126,7 +127,7 @@ class _HomeScreenState extends State<HomeScreen> {
                 ),
               ),
             ),
-            const Text(
+            /*const Text(
               'Current Key:',
               style: TextStyle(
                 fontSize: 24,
@@ -140,7 +141,7 @@ class _HomeScreenState extends State<HomeScreen> {
             ),
             const SizedBox(
               height: 20,
-            ),
+            ),*/
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: [
